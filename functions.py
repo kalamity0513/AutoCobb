@@ -1,4 +1,5 @@
 import numpy as np 
+import math 
 
 def ls_circle(xx, yy):
     asize = np.size(xx) # number of coordinate points given, atleast 30 minimum for the Cobb's Method
@@ -33,14 +34,40 @@ def ls_circle(xx, yy):
 
     return xofs, yofs, R
 
-def draw_line_between_centers(data):
+# Function to calculate the perpendicular line passing through the centers of the medial and lateral circles
+def perpendicular_line_through_centers(data):
     # Extract lateral and medial points
-    lateral_points = data[5]
-    medial_points = data[6]
+    lateral_points = [
+        data.get('anterolateral pt', None),
+        data.get('posterolateral pt', None),
+        data.get('pt 1 (L)', None),
+        data.get('pt 2 (L)', None),
+        data.get('pt 3 (L)', None),
+        data.get('pt 4 (L)', None),
+        data.get('pt 5 (L)', None),
+        data.get('pt 6 (L)', None),
+        data.get('pt 7 (L)', None),
+        data.get('pt 8 (L)', None),
+        data.get('pt 9 (L)', None)
+    ]
+
+    medial_points = [
+        data.get('anteromedial pt', None),
+        data.get('posteromedial pt', None),
+        data.get('pt 10 (M)', None),
+        data.get('pt 11 (M)', None),
+        data.get('pt 12 (M)', None),
+        data.get('pt 13 (M)', None),
+        data.get('pt 14 (M)', None),
+        data.get('pt 15 (M)', None),
+        data.get('pt 16 (M)', None),
+        data.get('pt 17 (M)', None),
+        data.get('pt 18 (M)', None)
+    ]
 
     # Calculate centers of circles for lateral and medial points
-    lateral_center = ls_circle([point[0] for point in lateral_points], [point[1] for point in lateral_points])
-    medial_center = ls_circle([point[0] for point in medial_points], [point[1] for point in medial_points])
+    lateral_center = ls_circle([point[0] for point in lateral_points if point is not None], [point[1] for point in lateral_points if point is not None])
+    medial_center = ls_circle([point[0] for point in medial_points if point is not None], [point[1] for point in medial_points if point is not None])
 
     # Calculate equation of the line passing through the centers
     x1, y1 = lateral_center[:2]
@@ -48,7 +75,46 @@ def draw_line_between_centers(data):
     m = (y2 - y1) / (x2 - x1)
     b = y1 - m * x1
 
+    # Calculate the slope of the perpendicular line
+    m_perpendicular = -1 / m if m != 0 else float('inf')
+
+    # The perpendicular line passes through the midpoint of the original line
+    x_mid = (x1 + x2) / 2
+    y_mid = (y1 + y2) / 2
+    b_perpendicular = y_mid - m_perpendicular * x_mid
+
+    return m_perpendicular, b_perpendicular
+
+def line_from_two_points(point1, point2):
+    """
+    Construct a line equation given two points.
+
+    Args:
+    point1 (tuple): Coordinates of the first point (x1, y1).
+    point2 (tuple): Coordinates of the second point (x2, y2).
+
+    Returns:
+    tuple: Slope (m) and y-intercept (b) of the line equation.
+    """
+    x1, y1 = point1
+    x2, y2 = point2
+
+    # Calculate the slope (m)
+    if x2 - x1 != 0:  # Avoid division by zero
+        m = (y2 - y1) / (x2 - x1)
+    else:
+        m = float('inf')  # If the line is vertical, slope is infinity
+
+    # Calculate the y-intercept (b)
+    b = y1 - m * x1
+
     return m, b
+
+def angle_between_lines(m1, m2):
+    # Calculate the angles using the slopes of the lines
+    angle_radians = math.atan(abs((m2 - m1) / (1 + m1 * m2)))
+    angle_degrees = math.degrees(angle_radians)
+    return angle_degrees
 
 def extract_data(data):
     """
@@ -59,7 +125,7 @@ def extract_data(data):
 
     Returns:
     tuple: A tuple containing slice number, medial rad, lateral rad, LatAng, MedAng,
-           lateral values, and medial values in the specified format.
+           lateral values, medial values, MTT pt, and PCL insertion pt in the specified format.
     """
     slice_number = data.get('Slice', None)
     medial_rad = data.get('medial rad', None)
@@ -70,30 +136,32 @@ def extract_data(data):
     lateral_values = [
         data.get('anterolateral pt', None),
         data.get('posterolateral pt', None),
-        data.get('pt 11 (L)', None),
-        data.get('pt 12 (L)', None),
-        data.get('pt 13 (L)', None),
-        data.get('pt 14 (L)', None),
-        data.get('pt 15 (L)', None),
-        data.get('pt 16 (L)', None),
-        data.get('pt 17 (L)', None),
-        data.get('pt 18 (L)', None),
-        data.get('pt 19 (L)', None)
+        data.get('pt 1 (L)', None),
+        data.get('pt 2 (L)', None),
+        data.get('pt 3 (L)', None),
+        data.get('pt 4 (L)', None),
+        data.get('pt 5 (L)', None),
+        data.get('pt 6 (L)', None),
+        data.get('pt 7 (L)', None),
+        data.get('pt 8 (L)', None),
+        data.get('pt 9 (L)', None)
     ]
 
     medial_values = [
         data.get('anteromedial pt', None),
-        data.get('posteroemdial pt', None),
-        data.get('pt 20 (M)', None),
-        data.get('pt 21 (M)', None),
-        data.get('pt 22 (M)', None),
-        data.get('pt 23 (M)', None),
-        data.get('pt 24 (M)', None),
-        data.get('pt 25 (M)', None),
-        data.get('pt 26 (M)', None),
-        data.get('pt 27 (M)', None),
-        data.get('pt 28 (M)', None)
+        data.get('posteromedial pt', None),
+        data.get('pt 10 (M)', None),
+        data.get('pt 11 (M)', None),
+        data.get('pt 12 (M)', None),
+        data.get('pt 13 (M)', None),
+        data.get('pt 14 (M)', None),
+        data.get('pt 15 (M)', None),
+        data.get('pt 16 (M)', None),
+        data.get('pt 17 (M)', None),
+        data.get('pt 18 (M)', None)
     ]
+    
+    mtt_pt = data.get('MTT pt', None)
+    pcl_insertion_pt = data.get('PCL insertion pt', None)
 
-    return slice_number, medial_rad, lateral_rad, LatAng, MedAng, lateral_values, medial_values
-
+    return slice_number, medial_rad, lateral_rad, LatAng, MedAng, lateral_values, medial_values, mtt_pt, pcl_insertion_pt
