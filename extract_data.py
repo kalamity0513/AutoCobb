@@ -7,7 +7,7 @@ def extract_data(data):
 
     Returns:
     tuple: A tuple containing slice number, medial rad, lateral rad, LatAng, MedAng,
-           and lateral values in the specified format.
+           lateral values, and medial values in the specified format.
     """
     slice_number = data.get('Slice', None)
     medial_rad = data.get('medial rad', None)
@@ -29,5 +29,19 @@ def extract_data(data):
         data.get('pt 19 (L)', None)
     ]
 
-    return slice_number, medial_rad, lateral_rad, LatAng, MedAng, lateral_values
+    medial_values = [
+        data.get('anteromedial pt', None),
+        data.get('posteroemdial pt', None),
+        data.get('pt 20 (M)', None),
+        data.get('pt 21 (M)', None),
+        data.get('pt 22 (M)', None),
+        data.get('pt 23 (M)', None),
+        data.get('pt 24 (M)', None),
+        data.get('pt 25 (M)', None),
+        data.get('pt 26 (M)', None),
+        data.get('pt 27 (M)', None),
+        data.get('pt 28 (M)', None)
+    ]
+
+    return slice_number, medial_rad, lateral_rad, LatAng, MedAng, lateral_values, medial_values
 
