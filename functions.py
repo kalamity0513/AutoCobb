@@ -35,35 +35,7 @@ def ls_circle(xx, yy):
     return xofs, yofs, R
 
 # Function to calculate the perpendicular line passing through the centers of the medial and lateral circles
-def perpendicular_line_through_centers(data):
-    # Extract lateral and medial points
-    lateral_points = [
-        data.get('anterolateral pt', None),
-        data.get('posterolateral pt', None),
-        data.get('pt 1 (L)', None),
-        data.get('pt 2 (L)', None),
-        data.get('pt 3 (L)', None),
-        data.get('pt 4 (L)', None),
-        data.get('pt 5 (L)', None),
-        data.get('pt 6 (L)', None),
-        data.get('pt 7 (L)', None),
-        data.get('pt 8 (L)', None),
-        data.get('pt 9 (L)', None)
-    ]
-
-    medial_points = [
-        data.get('anteromedial pt', None),
-        data.get('posteromedial pt', None),
-        data.get('pt 10 (M)', None),
-        data.get('pt 11 (M)', None),
-        data.get('pt 12 (M)', None),
-        data.get('pt 13 (M)', None),
-        data.get('pt 14 (M)', None),
-        data.get('pt 15 (M)', None),
-        data.get('pt 16 (M)', None),
-        data.get('pt 17 (M)', None),
-        data.get('pt 18 (M)', None)
-    ]
+def perpendicular_line_through_centers(lateral_points, medial_points):
 
     # Calculate centers of circles for lateral and medial points
     lateral_center = ls_circle([point[0] for point in lateral_points if point is not None], [point[1] for point in lateral_points if point is not None])
@@ -165,3 +137,12 @@ def extract_data(data):
     pcl_insertion_pt = data.get('PCL insertion pt', None)
 
     return slice_number, medial_rad, lateral_rad, LatAng, MedAng, lateral_values, medial_values, mtt_pt, pcl_insertion_pt
+
+def calc_angle(MTT, lateral_values, medial_values):
+    m, b = MTT
+    m_perpendicular, b_perpendicular = perpendicular_line_through_centers(lateral_values, medial_values)  # Pass knee data instead of knee name
+    angle = angle_between_lines(m, m_perpendicular)
+    return angle
+
+def get_mtt(knee_data):
+    return line_from_two_points(knee_data.get('MTT pt', None), knee_data.get('PCL insertion pt', None))
