@@ -1,3 +1,5 @@
+import numpy as np 
+
 def ls_circle(xx, yy):
     asize = np.size(xx) # number of coordinate points given, atleast 30 minimum for the Cobb's Method
     J = np.zeros((asize, 3)) # Jacobian matrix
